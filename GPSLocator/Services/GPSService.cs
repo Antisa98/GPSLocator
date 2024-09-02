@@ -47,7 +47,7 @@ namespace GPSLocator.Services
 
 				RequestModel requestModel = new RequestModel { Request = requestString, Response = responseString };
 				_context.Requests.Add(requestModel);
-				_context.SaveChanges();
+				await _context.SaveChangesAsync();
 			}
 			else
 			{
@@ -133,7 +133,7 @@ namespace GPSLocator.Services
 			};
 
 			_context.Users.Add(user);
-			_context.SaveChanges();
+			await _context.SaveChangesAsync();
 		}
 
 		public async Task AddToFavourite(int userId, string fsq_id)
@@ -144,7 +144,7 @@ namespace GPSLocator.Services
 			{
 				user.Favourite = fsq_id;
 			}
-			_context.SaveChanges();
+			await _context.SaveChangesAsync();
 		}
 
 		public async Task<List<SimpleUser>> GetUsers()
