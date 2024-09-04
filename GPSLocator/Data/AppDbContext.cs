@@ -13,5 +13,8 @@ namespace GPSLocator.Data
 
 		public DbSet<RequestModel> Requests { get; set; }
 		public DbSet<User> Users { get; set; }
+		public DbSet<Result> Results { get; set; } 
+		public DbSet<Location> Locations { get; set; } 
+		public DbSet<Category1> Category1s { get; set; } 
 	}
 }

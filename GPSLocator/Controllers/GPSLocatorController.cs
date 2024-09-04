@@ -36,7 +36,7 @@ namespace GPSLocator.Controllers
 		}
 
 		[HttpGet("requests")]
-		public async Task<ActionResult<IEnumerable<RequestModel>>> GetRequests()
+		public async Task<ActionResult<IEnumerable<Result>>> GetRequests()
 		{
 			return await _gpsService.GetRequests();
 		}

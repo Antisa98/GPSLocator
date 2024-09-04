@@ -45,8 +45,15 @@ namespace GPSLocator.Services
 
 				responseString = response.Content;
 
+				Rootobject? responseObject =
+				JsonSerializer.Deserialize<Rootobject>(responseString);
+
 				RequestModel requestModel = new RequestModel { Request = requestString, Response = responseString };
 				_context.Requests.Add(requestModel);
+				foreach (var item in responseObject.Results)
+				{
+					_context.Results.Add(item);
+				}
 				await _context.SaveChangesAsync();
 			}
 			else
@@ -57,9 +64,9 @@ namespace GPSLocator.Services
 			return responseString;
 		}
 
-		public async Task<List<RequestModel>> GetRequests()
+		public async Task<List<Result>> GetRequests()
 		{
-			return await _context.Requests.ToListAsync();
+			return await _context.Results.ToListAsync();
 		}
 
 		public async Task<List<Result>> GetFilteredRequests(string categoryFilter)
@@ -77,11 +84,11 @@ namespace GPSLocator.Services
 
 			foreach (var item in rootobjects)
 			{
-				var filteredResults = item.results
-					.Where(result => result.categories != null &&
-									 result.categories.Any(category => category.name.ToLower() == categoryFilter ||
-									 category.plural_name.ToLower() == categoryFilter ||
-									 category.short_name.ToLower() == categoryFilter))
+				var filteredResults = item.Results
+					.Where(result => result.Categories != null &&
+									 result.Categories.Any(category => category.Name.ToLower() == categoryFilter ||
+									 category.Plural_Name.ToLower() == categoryFilter ||
+									 category.Short_Name.ToLower() == categoryFilter))
 					.ToList();
 
 				listOfFilteredRequests.AddRange(filteredResults);
