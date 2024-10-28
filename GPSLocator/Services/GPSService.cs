@@ -1,11 +1,10 @@
 ﻿using GPSLocator.Data;
-using GPSLocator.Model;
+using GPSLocator.Hubs;
 using GPSLocator.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RestSharp;
-using System.Collections.Generic;
 using System.Text.Json;
-using static GPSLocator.Models.Rootobject;
 
 namespace GPSLocator.Services
 {
@@ -13,16 +12,19 @@ namespace GPSLocator.Services
 	{
 		private readonly AppDbContext _context;
 		private readonly string _apiKey;
+		private readonly IHubContext<GPSHub> _hubContext;
 
-		public GPSService(AppDbContext context, IConfiguration configuration)
+
+		public GPSService(AppDbContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext)
 		{
 			_context = context;
 			_apiKey = configuration["FoursquareApi:ApiKey"];
+			_hubContext = hubContext;
 		}
 
-		public async Task<string> GetPlaces(double latitude, double longitude, int radius)
+		public async Task<string> GetPlaces(string latitude_Longitude, int radius)
 		{
-			string querry = $"https://api.foursquare.com/v3/places/search?ll={latitude.ToString().Replace(',', '.')}%2C{longitude.ToString().Replace(',', '.')}&radius={radius}";
+			string querry = $"https://api.foursquare.com/v3/places/search?ll={latitude_Longitude.Replace(" ", "")}&radius={radius}";
 			var options = new RestClientOptions(querry);
 			var client = new RestClient(options);
 			var request = new RestRequest("");
@@ -32,9 +34,9 @@ namespace GPSLocator.Services
 			string requestString = options.BaseUrl.OriginalString;
 			string responseString;
 
-			RequestModel rm = _context.Requests.FirstOrDefault(x => x.Request == requestString);
+			LocationResult result = _context.Locations.FirstOrDefault(x => x.Request == requestString);
 
-			if (rm == null)
+			if (result == null)
 			{
 				var response = await client.GetAsync(request);
 
@@ -48,85 +50,72 @@ namespace GPSLocator.Services
 				Rootobject? responseObject =
 				JsonSerializer.Deserialize<Rootobject>(responseString);
 
-				RequestModel requestModel = new RequestModel { Request = requestString, Response = responseString };
-				_context.Requests.Add(requestModel);
-				foreach (var item in responseObject.Results)
+				foreach (var item in responseObject.results)
 				{
-					_context.Results.Add(item);
+					if (_context.Locations.Any(x => x.Fsq_Id == item.fsq_id))
+					{
+						continue;
+					}
+
+					LocationResult locationResult = new LocationResult(item);
+					locationResult.Request = requestString;
+					_context.Locations.Add(locationResult);
 				}
 				await _context.SaveChangesAsync();
 			}
 			else
 			{
-				responseString = rm.Response;
+				responseString = "That request string is already parsed in DB.";
 			}
+
+			await _hubContext.Clients.All.SendAsync("ReceiveRequest", requestString);
 
 			return responseString;
 		}
 
-		public async Task<List<Result>> GetRequests()
+		public async Task<List<LocationResult>> GetRequests()
 		{
-			return await _context.Results.ToListAsync();
+			return await _context.Locations.ToListAsync();
 		}
 
-		public async Task<List<Result>> GetFilteredRequests(string categoryFilter)
+		public async Task<List<LocationResult>> GetFilteredRequests(string categoryFilter)
 		{
-			List<RequestModel> listOfRequests = await _context.Requests.ToListAsync();
-			if (listOfRequests == null)
-			{
-				return null;
-			}
-
-			List<Rootobject> rootobjects = listOfRequests.Select(item => JsonSerializer.Deserialize<Rootobject>(item.Response)).ToList();
-
 			categoryFilter = categoryFilter.ToLower();
-			List<Result> listOfFilteredRequests = new List<Result>();
 
-			foreach (var item in rootobjects)
-			{
-				var filteredResults = item.Results
-					.Where(result => result.Categories != null &&
-									 result.Categories.Any(category => category.Name.ToLower() == categoryFilter ||
-									 category.Plural_Name.ToLower() == categoryFilter ||
-									 category.Short_Name.ToLower() == categoryFilter))
-					.ToList();
-
-				listOfFilteredRequests.AddRange(filteredResults);
-			}
+			List<LocationResult> listOfFilteredRequests = _context.Locations.Where(
+				x => x.Categories.Any(
+					y => y.ToLower().Equals(categoryFilter))).ToList();
 
 			return listOfFilteredRequests;
 		}
 
-		// TODO
-		public async Task<List<RequestModel>> SearchRequests(string categorySearch)
+		public async Task<List<LocationResult>> SearchRequests(string categorySearch)
 		{
-			List<RequestModel> listOfRequests = await _context.Requests.ToListAsync();
-			if (listOfRequests == null)
-			{
+			if (string.IsNullOrEmpty(categorySearch))
 				return null;
-			}
 
 			categorySearch = categorySearch.ToLower();
+			var query = _context.Locations.AsQueryable();
 
-			foreach (RequestModel item in listOfRequests)
-			{
-				string str = item.Response.ToLower();
-				if (String.IsNullOrEmpty(categorySearch))
-					throw new ArgumentException("The string to find may not be empty", nameof(categorySearch));
+			query = query.Where(p =>
+				p.Fsq_Id.Contains(categorySearch) ||
+				p.Closed_Bucket.Contains(categorySearch) ||
+				p.Distance.ToString().Contains(categorySearch) ||
+				p.Link.Contains(categorySearch) ||
+				p.Name.Contains(categorySearch) ||
+				p.Timezone.Contains(categorySearch) ||
+				p.Request.Contains(categorySearch) ||
+				p.Categories.Any(r => r.Contains(categorySearch)) ||
+				(p.LocationInfo != null &&
+				(p.LocationInfo.Address != null && p.LocationInfo.Address.Contains(categorySearch) ||
+				 p.LocationInfo.Country != null && p.LocationInfo.Country.Contains(categorySearch) ||
+				 p.LocationInfo.Formatted_Address != null && p.LocationInfo.Formatted_Address.Contains(categorySearch) ||
+				 p.LocationInfo.Locality != null && p.LocationInfo.Locality.Contains(categorySearch) ||
+				 p.LocationInfo.Postcode != null && p.LocationInfo.Postcode.Contains(categorySearch) ||
+				 p.LocationInfo.Region != null && p.LocationInfo.Region.Contains(categorySearch) ||
+				 p.LocationInfo.Cross_Street != null && p.LocationInfo.Cross_Street.Contains(categorySearch))));
 
-				var indexes = new List<int>();
-				for (int index = 0; ; index += categorySearch.Length)
-				{
-					index = str.IndexOf(categorySearch, index);
-					if (index == -1)
-						break;
-					indexes.Add(index);
-				}
-
-				Rootobject re = JsonSerializer.Deserialize<Rootobject>(item.Response);
-			}
-
-			return listOfRequests;
+			return await query.ToListAsync();
 		}
 
 		public async Task RegisterUser(string username, string password)

@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using GPSLocator.Model;
-using GPSLocator.Hubs;
-using Microsoft.AspNetCore.SignalR;
 using GPSLocator.Services;
 using GPSLocator.Models;
-using System.Collections.Generic;
 
 namespace GPSLocator.Controllers
 {
@@ -13,30 +9,26 @@ namespace GPSLocator.Controllers
 	public class GPSLocatorController : ControllerBase
 	{
 		private readonly GPSService _gpsService;
-		private readonly IHubContext<GPSHub> _hubContext;
 
-		public GPSLocatorController(GPSService gpsService, IHubContext<GPSHub> hubContext)
+		public GPSLocatorController(GPSService gpsService)
 		{
 			_gpsService = gpsService;
-			_hubContext = hubContext;
 		}
 
 		[HttpGet("places")]
-		public async Task<IActionResult> GetPlaces(double latitude, double longitude, int radius)
+		public async Task<IActionResult> GetPlaces(string latitude_Longitude, int radius)
 		{
-			var result = await _gpsService.GetPlaces(latitude, longitude, radius);
+			var result = await _gpsService.GetPlaces(latitude_Longitude, radius);
 			if (result == null)
 			{
 				return BadRequest("Error");
 			}
 
-			await _hubContext.Clients.All.SendAsync("ReceiveRequest", "places");
-
 			return Ok(result);
 		}
 
 		[HttpGet("requests")]
-		public async Task<ActionResult<IEnumerable<Result>>> GetRequests()
+		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequests()
 		{
 			return await _gpsService.GetRequests();
 		}
@@ -49,7 +41,7 @@ namespace GPSLocator.Controllers
 		}
 
 		[HttpGet("search")]
-		public async Task<ActionResult<IEnumerable<RequestModel>>> GetRequested(string categorySearch)
+		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequested(string categorySearch)
 		{
 			var result = await _gpsService.SearchRequests(categorySearch);
 			return Ok(result);

@@ -1,180 +1,104 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace GPSLocator.Models
+﻿
+public class Rootobject
 {
-	public class Rootobject
-	{
-		[Key]
-		public int Id { get; set; }
-		public virtual ICollection<Result> Results { get; set; } // Using ICollection for one-to-many relationship
-		public int ContextId { get; set; }
-		[JsonProperty(PropertyName = "context")]
-		public virtual Context Context { get; set; }
-	}
+	public Result[] results { get; set; }
+	public Context context { get; set; }
+}
 
-	public class Context
-	{
-		[Key]
-		public int Id { get; set; }
-		public int GeoBoundsId { get; set; }
-		public virtual GeoBounds Geo_Bounds { get; set; }
-	}
+public class Context
+{
+	public Geo_Bounds geo_bounds { get; set; }
+}
 
-	public class GeoBounds
-	{
-		[Key]
-		public int Id { get; set; }
-		public int CircleId { get; set; }
-		public virtual Circle Circle { get; set; }
-	}
+public class Geo_Bounds
+{
+	public Circle circle { get; set; }
+}
 
-	public class Circle
-	{
-		[Key]
-		public int Id { get; set; }
-		public int CenterId { get; set; }
-		public virtual Center Center { get; set; }
-		public int Radius { get; set; }
-	}
+public class Circle
+{
+	public Center center { get; set; }
+	public int radius { get; set; }
+}
 
-	public class Center
-	{
-		[Key]
-		public int Id { get; set; }
-		public float Latitude { get; set; }
-		public float Longitude { get; set; }
-	}
+public class Center
+{
+	public float latitude { get; set; }
+	public float longitude { get; set; }
+}
 
-	public class Result
-	{
-		[Key]
-		public int Id { get; set; }
-		public string? Fsq_Id { get; set; }
-		public virtual ICollection<Category1> Categories { get; set; } 
-		public string? Closed_Bucket { get; set; }
-		public int Distance { get; set; }
-		[NotMapped]
-		public int GeocodesId { get; set; }
-		[NotMapped]
-		public virtual Geocodes Geocodes { get; set; }
-		public string? Link { get; set; }
-		public int LocationId { get; set; }
-		public virtual Location Location { get; set; }
-		public string? Name { get; set; }
-		[NotMapped]
-		public int RelatedPlacesId { get; set; }
-		[NotMapped]
-		public virtual RelatedPlaces RelatedPlaces { get; set; }
-		public string? Timezone { get; set; }
-	}
+public class Result
+{
+	public string fsq_id { get; set; }
+	public Category[] categories { get; set; }
+	public Chain[] chains { get; set; }
+	public string closed_bucket { get; set; }
+	public int distance { get; set; }
+	public Geocodes geocodes { get; set; }
+	public string link { get; set; }
+	public Location location { get; set; }
+	public string name { get; set; }
+	public Related_Places related_places { get; set; }
+	public string timezone { get; set; }
+}
 
-	public class Geocodes
-	{
-		[Key]
-		public int Id { get; set; }
-		public int MainId { get; set; }
-		public virtual Main Main { get; set; }
-		public int RoofId { get; set; }
-		public virtual Roof Roof { get; set; }
-	}
+public class Geocodes
+{
+	public Drop_Off drop_off { get; set; }
+	public Main main { get; set; }
+	public Roof roof { get; set; }
+}
 
-	public class Main
-	{
-		[Key]
-		public int Id { get; set; }
-		public float Latitude { get; set; }
-		public float Longitude { get; set; }
-	}
+public class Drop_Off
+{
+	public float latitude { get; set; }
+	public float longitude { get; set; }
+}
 
-	public class Roof
-	{
-		[Key]
-		public int Id { get; set; }
-		public float Latitude { get; set; }
-		public float Longitude { get; set; }
-	}
+public class Main
+{
+	public float latitude { get; set; }
+	public float longitude { get; set; }
+}
 
-	public class DropOff
-	{
-		[Key]
-		public int Id { get; set; }
-		public float Latitude { get; set; }
-		public float Longitude { get; set; }
-	}
+public class Roof
+{
+	public float latitude { get; set; }
+	public float longitude { get; set; }
+}
 
-	public class Location
-	{
-		[Key]
-		public int Id { get; set; }
-		public string? Address { get; set; }
-		public string? Country { get; set; }
-		public string? Formatted_Address { get; set; }
-		public string? Locality { get; set; }
-		public string? Postcode { get; set; }
-		public string? Region { get; set; }
-		public string? Cross_Street { get; set; }
-	}
+public class Location
+{
+	public string address { get; set; }
+	public string country { get; set; }
+	public string cross_street { get; set; }
+	public string formatted_address { get; set; }
+	public string locality { get; set; }
+	public string postcode { get; set; }
+	public string region { get; set; }
+}
 
-	public class RelatedPlaces
-	{
-		[Key]
-		public int Id { get; set; }
-		public virtual ICollection<Child> Children { get; set; }
-	}
+public class Related_Places
+{
+}
 
-	public class Child
-	{
-		[Key]
-		public int Id { get; set; }
-		public string? Fsq_Id { get; set; }
-		public virtual ICollection<Category> Categories { get; set; }
-		public string? Name { get; set; }
-	}
+public class Category
+{
+	public int id { get; set; }
+	public string name { get; set; }
+	public string short_name { get; set; }
+	public string plural_name { get; set; }
+	public Icon icon { get; set; }
+}
 
-	public class Category
-	{
-		[Key]
-		public int Id { get; set; }
-		public int ExternalId { get; set; }
-		public string? Name { get; set; }
-		public string? Short_Name { get; set; }
-		public string? Plural_Name { get; set; }
-		public int IconId { get; set; }
-		public virtual Icon Icon { get; set; }
-	}
+public class Icon
+{
+	public string prefix { get; set; }
+	public string suffix { get; set; }
+}
 
-	public class Icon
-	{
-		[Key]
-		public int Id { get; set; }
-		public string? Prefix { get; set; }
-		public string? Suffix { get; set; }
-	}
-
-	public class Category1
-	{
-		[Key]
-		[Column("Id")]
-		public int DbId { get; set; }
-
-		[JsonProperty("id")]
-		public int ExternalId { get; set; }
-		public string? Name { get; set; }
-		public string? Short_Name { get; set; }
-		public string? Plural_Name { get; set; }
-		[NotMapped]
-		public int IconId { get; set; }
-		[NotMapped]
-		public virtual Icon1 Icon { get; set; }
-	}
-
-	public class Icon1
-	{
-		[Key]
-		public int Id { get; set; }
-		public string? Prefix { get; set; }
-		public string? Suffix { get; set; }
-	}
+public class Chain
+{
+	public string id { get; set; }
+	public string name { get; set; }
 }
