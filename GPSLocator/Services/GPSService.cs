@@ -14,7 +14,6 @@ namespace GPSLocator.Services
 		private readonly string _apiKey;
 		private readonly IHubContext<GPSHub> _hubContext;
 
-
 		public GPSService(AppDbContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext)
 		{
 			_context = context;

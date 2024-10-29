@@ -47,7 +47,7 @@ namespace GPSLocator.Controllers
 			return Ok(result);
 		}
 
-		[HttpGet("registr")]
+		[HttpGet("register")]
 		public async Task<IActionResult> Register(string username, string password)
 		{
 			await _gpsService.RegisterUser(username, password);
@@ -64,7 +64,7 @@ namespace GPSLocator.Controllers
 		[HttpGet("favourite")]
 		public async Task<IActionResult> AddToFavourite(int userId, string fsq_id)
 		{
-			await _gpsService.AddToFavourite(userId, fsq_id);
+			var result = await _gpsService.AddToFavourite(userId, fsq_id);
 
 			return Ok();
 		}
