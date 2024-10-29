@@ -64,7 +64,7 @@ namespace GPSLocator.Controllers
 		[HttpGet("favourite")]
 		public async Task<IActionResult> AddToFavourite(int userId, string fsq_id)
 		{
-			var result = await _gpsService.AddToFavourite(userId, fsq_id);
+			 await _gpsService.AddToFavourite(userId, fsq_id);
 
 			return Ok();
 		}
