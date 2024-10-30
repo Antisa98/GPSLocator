@@ -1,0 +1,220 @@
+{
+	"info": {
+		"_postman_id": "44f0db5c-e70d-4e60-a5b4-7a4484cd903e",
+		"name": "GPSLocator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39370844"
+	},
+	"item": [
+		{
+			"name": "AddTofavourite",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Api-Key",
+						"value": "9bb98193-d1cb-40b2-b8c9-db5a89a08417",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userId\": 8,\r\n    \"fsq_id\": \"123456789\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/favourite",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"favourite"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetRequests",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Api-Key",
+						"value": "26895892-4fca-4784-a05f-858e842634d9",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/requests",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"requests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Filter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/filter?categoryFilter=bar",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "categoryFilter",
+							"value": "bar"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "text/plain"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userName\": \"Anto\",\r\n  \"password\": \"123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/login",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"login"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'https://localhost:7028/gps-locator/login' \\\r\n  -H 'accept: text/plain' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"userName\": \"string\",\r\n  \"password\": \"string\"\r\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"userName\": \"Anto\",\r\n  \"password\": \"123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/register",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"register"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'https://localhost:7028/gps-locator/register' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"userName\": \"Anto\",\r\n  \"password\": \"123\"\r\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "Places",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "X-Api-Key",
+						"value": "26895892-4fca-4784-a05f-858e842634d9",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://localhost:7028/gps-locator/places?Latitude=45.812771998090085&Longitude=15.977702252396504&Radius=100",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7028",
+					"path": [
+						"gps-locator",
+						"places"
+					],
+					"query": [
+						{
+							"key": "Latitude",
+							"value": "45.812771998090085"
+						},
+						{
+							"key": "Longitude",
+							"value": "15.977702252396504"
+						},
+						{
+							"key": "Radius",
+							"value": "100"
+						}
+					]
+				},
+				"description": "Generated from cURL: curl -X 'POST' \\\r\n  'https://localhost:7028/gps-locator/places?Latitude=1&Longitude=1&Radius=1' \\\r\n  -H 'accept: */*' \\\r\n  -d ''"
+			},
+			"response": []
+		}
+	]
+}
