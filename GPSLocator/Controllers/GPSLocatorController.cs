@@ -1,54 +1,56 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using GPSLocator.Services;
+﻿using GPSLocator.Filters;
 using GPSLocator.Models;
 using GPSLocator.Models.Request;
-using GPSLocator.Filters;
-using Azure.Core;
 using GPSLocator.Models.Response;
+using GPSLocator.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GPSLocator.Controllers
 {
 	[Route("gps-locator")]
 	[ApiController]
-	public class GPSLocatorController : ControllerBase
+	public class GPSLocatorController(GPSService gpsService) : ControllerBase
 	{
-		private readonly GPSService _gpsService;
-
-		public GPSLocatorController(GPSService gpsService)
-		{
-			_gpsService = gpsService;
-		}
-
 		[HttpPost("places")]
+		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> LocateAsync([FromQuery] LocateRequest request)
 		{
-			await _gpsService.LocateAsync(request);
+			await gpsService.LocateAsync(request);
 			return Ok();
 		}
 
 		[HttpGet("requests")]
+		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequestsAsync()
 		{
-			return Ok(await _gpsService.GetRequestsAsync());
+			return Ok(await gpsService.GetRequestsAsync());
 		}
 
 		[HttpGet("filter")]
+		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> GetFilteredAsync([FromQuery] string categoryFilter)
 		{
-			return Ok(await _gpsService.GetFilteredAsync(categoryFilter));
+			return Ok(await gpsService.GetFilteredAsync(categoryFilter));
 		}
 
 		[HttpGet("search")]
+		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<ActionResult<IEnumerable<LocationResult>>> SearchRequestsAsync([FromQuery] string categorySearch)
 		{
-			return Ok(await _gpsService.SearchRequestsAsync(categorySearch));
+			return Ok(await gpsService.SearchRequestsAsync(categorySearch));
 		}
 
 		[HttpPost("register")]
 		public async Task<IActionResult> RegisterAsync(RegisterRequest request)
 		{
-			await _gpsService.RegisterUserAsync(request);
-			return Ok();
+			var result = await gpsService.RegisterUserAsync(request);
+
+			if (result == null)
+			{
+				return Unauthorized("Username already exists.");
+			}
+
+			return Ok(new RegisterResponse { ApiKey = result });
 		}
 
 		[HttpPost("login")]
@@ -56,8 +58,7 @@ namespace GPSLocator.Controllers
 		[ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
 		public async Task<IActionResult> LoginAsync(LoginRequest request)
 		{
-
-			var result = await _gpsService.LoginAsync(request);
+			var result = await gpsService.LoginAsync(request);
 
 			if (result == null)
 			{
@@ -68,10 +69,10 @@ namespace GPSLocator.Controllers
 		}
 
 		[HttpPost("favourite")]
-		[APIKeyFilter]
+		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> AddToFavouriteAsync(AddToFavouriteRequest request)
 		{
-			await _gpsService.AddToFavouriteAsync(request);
+			await gpsService.AddToFavouriteAsync(request);
 
 			return Ok();
 		}

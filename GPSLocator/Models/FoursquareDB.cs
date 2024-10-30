@@ -4,10 +4,9 @@ namespace GPSLocator.Models
 {
 	public class LocationResult
 	{
-        public LocationResult()
-        {
-        }
-        public LocationResult(Result result)
+		public LocationResult() { }
+
+		public LocationResult(Result result)
 		{
 			this.Fsq_Id = result.fsq_id;
 			this.Closed_Bucket = result.closed_bucket;
@@ -42,11 +41,9 @@ namespace GPSLocator.Models
 
 	public class LocationInfo
 	{
-        public LocationInfo()
-        {
-            
-        }
-        public LocationInfo(Location location)
+		public LocationInfo() { }
+
+		public LocationInfo(Location location)
 		{
 			this.Address = location.address;
 			this.Country = location.country;
