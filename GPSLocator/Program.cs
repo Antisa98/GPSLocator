@@ -1,4 +1,5 @@
 using GPSLocator.Data;
+using GPSLocator.Filters;
 using GPSLocator.Hubs;
 using GPSLocator.Services;
 using Microsoft.EntityFrameworkCore;
@@ -10,14 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<GPSService>();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<APIKeyFilter>();
 
 builder.Services.AddScoped<GPSService>();
-var serviceProvider = builder.Services.AddDbContext<AppDbContext>(options =>
+
+var serviceProvider = builder.Services.AddDbContext<GPSLocatorContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))).BuildServiceProvider();
 
-using (var context = serviceProvider.GetRequiredService<AppDbContext>())
+using (var context = serviceProvider.GetRequiredService<GPSLocatorContext>())
 {
 	context.Database.EnsureCreated();
 }

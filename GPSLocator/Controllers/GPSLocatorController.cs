@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GPSLocator.Services;
 using GPSLocator.Models;
+using GPSLocator.Models.Request;
+using GPSLocator.Filters;
+using Azure.Core;
+using GPSLocator.Models.Response;
 
 namespace GPSLocator.Controllers
 {
-	[Route("api/[controller]")]
+	[Route("gps-locator")]
 	[ApiController]
 	public class GPSLocatorController : ControllerBase
 	{
@@ -15,64 +19,61 @@ namespace GPSLocator.Controllers
 			_gpsService = gpsService;
 		}
 
-		[HttpGet("places")]
-		public async Task<IActionResult> GetPlaces(string latitude_Longitude, int radius)
+		[HttpPost("places")]
+		public async Task<IActionResult> LocateAsync([FromQuery] LocateRequest request)
 		{
-			var result = await _gpsService.GetPlaces(latitude_Longitude, radius);
-			if (result == null)
-			{
-				return BadRequest("Error");
-			}
-
-			return Ok(result);
+			await _gpsService.LocateAsync(request);
+			return Ok();
 		}
 
 		[HttpGet("requests")]
-		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequests()
+		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequestsAsync()
 		{
-			return await _gpsService.GetRequests();
+			return Ok(await _gpsService.GetRequestsAsync());
 		}
 
 		[HttpGet("filter")]
-		public async Task<IActionResult> GetFiltered(string categoryFilter)
+		public async Task<IActionResult> GetFilteredAsync([FromQuery] string categoryFilter)
 		{
-			var result = await _gpsService.GetFilteredRequests(categoryFilter);
-			return Ok(result);
+			return Ok(await _gpsService.GetFilteredAsync(categoryFilter));
 		}
 
 		[HttpGet("search")]
-		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequested(string categorySearch)
+		public async Task<ActionResult<IEnumerable<LocationResult>>> SearchRequestsAsync([FromQuery] string categorySearch)
 		{
-			var result = await _gpsService.SearchRequests(categorySearch);
-			return Ok(result);
+			return Ok(await _gpsService.SearchRequestsAsync(categorySearch));
 		}
 
-		[HttpGet("register")]
-		public async Task<IActionResult> Register(string username, string password)
+		[HttpPost("register")]
+		public async Task<IActionResult> RegisterAsync(RegisterRequest request)
 		{
-			await _gpsService.RegisterUser(username, password);
+			await _gpsService.RegisterUserAsync(request);
 			return Ok();
 		}
 
-		[HttpGet("login")]
-		public async Task<IActionResult> Login(string username, string password)
+		[HttpPost("login")]
+		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+		public async Task<IActionResult> LoginAsync(LoginRequest request)
 		{
-			// Add logic for login
-			return Ok();
+
+			var result = await _gpsService.LoginAsync(request);
+
+			if (result == null)
+			{
+				return Unauthorized("Invalid username or password.");
+			}
+
+			return Ok(new LoginResponse { ApiKey = result });
 		}
 
-		[HttpGet("favourite")]
-		public async Task<IActionResult> AddToFavourite(int userId, string fsq_id)
+		[HttpPost("favourite")]
+		[APIKeyFilter]
+		public async Task<IActionResult> AddToFavouriteAsync(AddToFavouriteRequest request)
 		{
-			 await _gpsService.AddToFavourite(userId, fsq_id);
+			await _gpsService.AddToFavouriteAsync(request);
 
 			return Ok();
-		}
-
-		[HttpGet("getUsers")]
-		public async Task<ActionResult<IEnumerable<SimpleUser>>> GetUsers()
-		{
-			return await _gpsService.GetUsers();
 		}
 	}
 }

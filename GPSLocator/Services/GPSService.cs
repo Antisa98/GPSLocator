@@ -1,100 +1,91 @@
 ﻿using GPSLocator.Data;
 using GPSLocator.Hubs;
 using GPSLocator.Models;
+using GPSLocator.Models.Request;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RestSharp;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Web;
 
 namespace GPSLocator.Services
 {
-	public class GPSService
+	public class GPSService(GPSLocatorContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext, HttpClient httpClient)
 	{
-		private readonly AppDbContext _context;
-		private readonly string _apiKey;
-		private readonly IHubContext<GPSHub> _hubContext;
+		private const string AUTHORIZATION_PARAMETER_TYPE_NAME = "Authorization";
 
-		public GPSService(AppDbContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext)
+		public async Task LocateAsync(LocateRequest request)
 		{
-			_context = context;
-			_apiKey = configuration["FoursquareApi:ApiKey"];
-			_hubContext = hubContext;
-		}
+			string apiKey = configuration["FoursquareApi:ApiKey"];
+			string path = $"https://api.foursquare.com/v3/places/search?ll={request.Latitude},{request.Longitude}&radius={request.Radius}";
 
-		public async Task<string> GetPlaces(string latitude_Longitude, int radius)
-		{
-			string querry = $"https://api.foursquare.com/v3/places/search?ll={latitude_Longitude.Replace(" ", "")}&radius={radius}";
-			var options = new RestClientOptions(querry);
+			//httpClient.DefaultRequestHeaders.Clear();
+			//httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+			//httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AUTHORIZATION_PARAMETER_TYPE_NAME, apiKey);
+
+
+			var options = new RestClientOptions(path);
 			var client = new RestClient(options);
-			var request = new RestRequest("");
-			request.AddHeader("accept", "application/json");
-			request.AddHeader("Authorization", _apiKey);
+			var restRequest = new RestRequest("");
+			restRequest.AddHeader("accept", "application/json");
+			restRequest.AddHeader(AUTHORIZATION_PARAMETER_TYPE_NAME, apiKey);
+			var response = await client.GetAsync(restRequest);
 
-			string requestString = options.BaseUrl.OriginalString;
-			string responseString;
 
-			LocationResult result = _context.Locations.FirstOrDefault(x => x.Request == requestString);
+
+			LocationResult result = context.Locations.FirstOrDefault(x => x.Request == path);
 
 			if (result == null)
 			{
-				var response = await client.GetAsync(request);
-
-				if (!response.IsSuccessStatusCode)
-				{
-					return null;
-				}
-
-				responseString = response.Content;
+				//var response = await httpClient.GetAsync(path);
+				//response.EnsureSuccessStatusCode();
+				//string responseString = await response.Content.ReadAsStringAsync();
 
 				Rootobject? responseObject =
-				JsonSerializer.Deserialize<Rootobject>(responseString);
+				JsonSerializer.Deserialize<Rootobject>(/*responseString*/response.Content);
 
 				foreach (var item in responseObject.results)
 				{
-					if (_context.Locations.Any(x => x.Fsq_Id == item.fsq_id))
+					if (context.Locations.Any(x => x.Fsq_Id == item.fsq_id))
 					{
 						continue;
 					}
 
 					LocationResult locationResult = new LocationResult(item);
-					locationResult.Request = requestString;
-					_context.Locations.Add(locationResult);
+					locationResult.Request = path;
+					context.Locations.Add(locationResult);
 				}
-				await _context.SaveChangesAsync();
-			}
-			else
-			{
-				responseString = "That request string is already parsed in DB.";
+
+				await context.SaveChangesAsync();
 			}
 
-			await _hubContext.Clients.All.SendAsync("ReceiveRequest", requestString);
-
-			return responseString;
+			await hubContext.Clients.All.SendAsync("ReceiveRequest", path);
 		}
 
-		public async Task<List<LocationResult>> GetRequests()
+		public async Task<List<LocationResult>> GetRequestsAsync()
 		{
-			return await _context.Locations.ToListAsync();
+			return await context.Locations.ToListAsync();
 		}
 
-		public async Task<List<LocationResult>> GetFilteredRequests(string categoryFilter)
+		public async Task<List<LocationResult>> GetFilteredAsync(string categoryFilter)
 		{
 			categoryFilter = categoryFilter.ToLower();
 
-			List<LocationResult> listOfFilteredRequests = _context.Locations.Where(
+			List<LocationResult> listOfFilteredRequests = context.Locations.Where(
 				x => x.Categories.Any(
 					y => y.ToLower().Equals(categoryFilter))).ToList();
 
 			return listOfFilteredRequests;
 		}
 
-		public async Task<List<LocationResult>> SearchRequests(string categorySearch)
+		public async Task<List<LocationResult>> SearchRequestsAsync(string categorySearch)
 		{
 			if (string.IsNullOrEmpty(categorySearch))
 				return null;
 
 			categorySearch = categorySearch.ToLower();
-			var query = _context.Locations.AsQueryable();
+			var query = context.Locations.AsQueryable();
 
 			query = query.Where(p =>
 				p.Fsq_Id.Contains(categorySearch) ||
@@ -117,40 +108,51 @@ namespace GPSLocator.Services
 			return await query.ToListAsync();
 		}
 
-		public async Task RegisterUser(string username, string password)
+		public async Task RegisterUserAsync(RegisterRequest request)
 		{
-			User user = new User
+			User? user = await context.Users.FirstOrDefaultAsync(x => x.Username == request.UserName);
+
+			if (user != default(User))
 			{
-				Username = username,
-				PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-				ApiKey = "",
+				return;
+			}
+
+			user = new User
+			{
+				Username = request.UserName,
+				PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+				ApiKey = Guid.NewGuid().ToString(),
 				Favourite = ""
 			};
 
-			_context.Users.Add(user);
-			await _context.SaveChangesAsync();
+			context.Users.Add(user);
+			await context.SaveChangesAsync();
 		}
 
-		public async Task AddToFavourite(int userId, string fsq_id)
+		public async Task<string> LoginAsync(LoginRequest request)
 		{
-			User user = _context.Users.FirstOrDefault(x => x.Id == userId);
+			User? user = await context.Users.FirstOrDefaultAsync(
+				x => x.Username == request.UserName);
 
-			if (user != null && !string.IsNullOrEmpty(fsq_id))
+			if (user != default(User) &&
+				BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
 			{
-				user.Favourite = fsq_id;
+				return user.ApiKey;
 			}
-			await _context.SaveChangesAsync();
+
+			return "";
 		}
 
-		public async Task<List<SimpleUser>> GetUsers()
+		public async Task AddToFavouriteAsync(AddToFavouriteRequest request)
 		{
-			return await _context.Users
-				.Select(user => new SimpleUser
-				{
-					Id = user.Id,
-					Username = user.Username
-				})
-				.ToListAsync();
+			User? user = await context.Users.FindAsync(request.UserId);
+
+			if (user != null && !string.IsNullOrEmpty(request.FoursquareId))
+			{
+				user.Favourite = request.FoursquareId;
+			}
+
+			await context.SaveChangesAsync();
 		}
 	}
 }

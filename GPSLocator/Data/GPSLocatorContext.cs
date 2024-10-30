@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GPSLocator.Data
 {
-	public class AppDbContext : DbContext
+	public class GPSLocatorContext : DbContext
 	{
-		public AppDbContext(DbContextOptions<AppDbContext> options)
+		public GPSLocatorContext(DbContextOptions<GPSLocatorContext> options)
 			: base(options)
 		{
 		}
