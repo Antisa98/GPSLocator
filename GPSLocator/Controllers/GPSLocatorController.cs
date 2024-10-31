@@ -15,7 +15,9 @@ namespace GPSLocator.Controllers
 		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> LocateAsync([FromQuery] LocateRequest request)
 		{
-			await gpsService.LocateAsync(request);
+			string userId = HttpContext.Items["UserId"].ToString();
+			await gpsService.LocateAsync(userId, request);
+
 			return Ok();
 		}
 
@@ -23,21 +25,27 @@ namespace GPSLocator.Controllers
 		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<ActionResult<IEnumerable<LocationResult>>> GetRequestsAsync()
 		{
-			return Ok(await gpsService.GetRequestsAsync());
+			string userId = HttpContext.Items["UserId"].ToString();
+
+			return Ok(await gpsService.GetRequestsAsync(userId));
 		}
 
 		[HttpGet("filter")]
 		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> GetFilteredAsync([FromQuery] string categoryFilter)
 		{
-			return Ok(await gpsService.GetFilteredAsync(categoryFilter));
+			string userId = HttpContext.Items["UserId"].ToString();
+
+			return Ok(await gpsService.GetFilteredAsync(userId, categoryFilter));
 		}
 
 		[HttpGet("search")]
 		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<ActionResult<IEnumerable<LocationResult>>> SearchRequestsAsync([FromQuery] string categorySearch)
 		{
-			return Ok(await gpsService.SearchRequestsAsync(categorySearch));
+			string userId = HttpContext.Items["UserId"].ToString();
+
+			return Ok(await gpsService.SearchRequestsAsync(userId, categorySearch));
 		}
 
 		[HttpPost("register")]
@@ -74,8 +82,9 @@ namespace GPSLocator.Controllers
 		[ServiceFilter(typeof(APIKeyFilter))]
 		public async Task<IActionResult> AddToFavouriteAsync(AddToFavouriteRequest request)
 		{
-			await gpsService.AddToFavouriteAsync(request);
+			string userId = HttpContext.Items["UserId"].ToString();
 
+			await gpsService.AddToFavouriteAsync(userId, request);
 			return Ok();
 		}
 	}

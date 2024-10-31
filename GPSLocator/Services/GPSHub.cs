@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace GPSLocator.Hubs
+namespace GPSLocator.Services
 {
 	public class GPSHub : Hub
 	{

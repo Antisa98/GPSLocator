@@ -1,6 +1,5 @@
 using GPSLocator.Data;
 using GPSLocator.Filters;
-using GPSLocator.Hubs;
 using GPSLocator.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +13,7 @@ builder.Services.AddHttpClient<GPSService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<APIKeyFilter>();
 builder.Services.AddScoped<GPSService>();
+builder.Services.AddScoped<UserRequestHandler>();
 
 // Register the database context
 builder.Services.AddDbContext<GPSLocatorContext>(options =>
