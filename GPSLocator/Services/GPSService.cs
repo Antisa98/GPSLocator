@@ -197,7 +197,12 @@ namespace GPSLocator.Services
 			User? user = await context.Users.FirstOrDefaultAsync(
 				x => x.Username == request.UserName);
 
-			return user?.ApiKey;
+			if (user != default(User) && BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+			{
+				return user?.ApiKey;
+			}
+
+			return null;
 		}
 
 		public async Task AddToFavouriteAsync(AddToFavouriteRequest request)
