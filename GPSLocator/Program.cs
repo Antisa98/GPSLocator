@@ -1,5 +1,6 @@
 using GPSLocator.Data;
 using GPSLocator.Filters;
+using GPSLocator.Handlers;
 using GPSLocator.Services;
 using Microsoft.EntityFrameworkCore;
 
