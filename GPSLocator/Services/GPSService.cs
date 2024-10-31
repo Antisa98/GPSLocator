@@ -9,59 +9,9 @@ using System.Text.Json;
 
 namespace GPSLocator.Services
 {
-	public class GPSService(GPSLocatorContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext, HttpClient httpClient)
+	public class GPSService(GPSLocatorContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext)
 	{
 		private const string AUTHORIZATION_PARAMETER_TYPE_NAME = "Authorization";
-
-		//public async Task LocateAsync(LocateRequest request)
-		//{
-		//	string apiKey = configuration["FoursquareApi:ApiKey"];
-		//	string path = $"https://api.foursquare.com/v3/places/search?ll={request.Latitude},{request.Longitude}&radius={request.Radius}";
-
-		//	//httpClient.DefaultRequestHeaders.Clear();
-		//	//httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-		//	//httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(AUTHORIZATION_PARAMETER_TYPE_NAME, apiKey);
-
-		//	var options = new RestClientOptions(path);
-		//	var client = new RestClient(options);
-		//	var restRequest = new RestRequest("");
-		//	restRequest.AddHeader("accept", "application/json");
-		//	restRequest.AddHeader(AUTHORIZATION_PARAMETER_TYPE_NAME, apiKey);
-		//	var response = await client.GetAsync(restRequest);
-
-		//	if (!response.IsSuccessful || response.Content == null)
-		//	{
-		//		throw new HttpRequestException($"Error fetching data from Foursquare API: {response.StatusCode} - {response.ErrorMessage}");
-		//	}
-
-		//	LocationResult? result = context.Locations.FirstOrDefault(x => x.Request == path);
-
-		//	if (result == default(LocationResult))
-		//	{
-		//		//var response = await httpClient.GetAsync(path);
-		//		//response.EnsureSuccessStatusCode();
-		//		//string responseString = await response.Content.ReadAsStringAsync();
-
-		//		Rootobject? responseObject =
-		//		JsonSerializer.Deserialize<Rootobject>(/*responseString*/response.Content);
-
-		//		foreach (var item in responseObject.results)
-		//		{
-		//			if (context.Locations.Any(x => x.Fsq_Id == item.fsq_id))
-		//			{
-		//				continue;
-		//			}
-
-		//			LocationResult locationResult = new LocationResult(item);
-		//			locationResult.Request = path;
-		//			context.Locations.Add(locationResult);
-		//		}
-
-		//		await context.SaveChangesAsync();
-		//	}
-
-		//	await hubContext.Clients.All.SendAsync("ReceiveRequest", path);
-		//}
 
 		public async Task LocateAsync(LocateRequest request)
 		{
@@ -131,8 +81,8 @@ namespace GPSLocator.Services
 			categoryFilter = categoryFilter.ToLower();
 
 			List<LocationResult> listOfFilteredRequests = await context.Locations
-				.Where(x => x.Categories.Any(y =>
-					string.Equals(y, categoryFilter, StringComparison.OrdinalIgnoreCase)))
+				.Where(x => x.Categories
+				.Any(y => y.ToLower().Equals(categoryFilter)))
 				.ToListAsync();
 
 			return listOfFilteredRequests;
@@ -140,9 +90,6 @@ namespace GPSLocator.Services
 
 		public async Task<IEnumerable<LocationResult>> SearchRequestsAsync(string categorySearch)
 		{
-			if (string.IsNullOrEmpty(categorySearch))
-				return Enumerable.Empty<LocationResult>(); // Return an empty list instead of null
-
 			categorySearch = categorySearch.ToLower();
 			var query = context.Locations.AsQueryable();
 

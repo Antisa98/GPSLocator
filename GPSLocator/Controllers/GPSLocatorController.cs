@@ -41,6 +41,7 @@ namespace GPSLocator.Controllers
 		}
 
 		[HttpPost("register")]
+		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegisterResponse))]
 		public async Task<IActionResult> RegisterAsync(RegisterRequest request)
 		{
 			var result = await gpsService.RegisterUserAsync(request);
@@ -56,6 +57,7 @@ namespace GPSLocator.Controllers
 		[HttpPost("login")]
 		[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(string))]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(string))]
 		public async Task<IActionResult> LoginAsync(LoginRequest request)
 		{
 			var result = await gpsService.LoginAsync(request);

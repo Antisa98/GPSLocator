@@ -1,6 +1,6 @@
 ﻿namespace GPSLocator.Models.Response
 {
-	public class RegisterResponse
+	public record RegisterResponse
 	{
 		public string ApiKey { get; set; }
 	}
