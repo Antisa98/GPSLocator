@@ -41,11 +41,11 @@ namespace GPSLocator.Controllers
 
 		[HttpGet("search")]
 		[ServiceFilter(typeof(APIKeyFilter))]
-		public async Task<ActionResult<IEnumerable<LocationResult>>> SearchRequestsAsync([FromQuery] string categorySearch)
+		public async Task<ActionResult<IEnumerable<LocationResult>>> SearchLocationsAsync([FromQuery] string categorySearch)
 		{
 			string userId = HttpContext.Items["UserId"].ToString();
 
-			return Ok(await gpsService.SearchRequestsAsync(userId, categorySearch));
+			return Ok(await gpsService.SearchLocationsAsync(userId, categorySearch));
 		}
 
 		[HttpPost("register")]

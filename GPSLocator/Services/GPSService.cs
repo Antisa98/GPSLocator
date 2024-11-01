@@ -93,31 +93,29 @@ namespace GPSLocator.Services
 			});
 		}
 
-		public async Task<IEnumerable<LocationResult>> SearchRequestsAsync(string UserId, string categorySearch)
+		public async Task<IEnumerable<LocationResult>> SearchLocationsAsync(string UserId, string categorySearch)
 		{
 			return await handler.HandleUserRequestAsync(UserId, async () =>
 			{
 				categorySearch = categorySearch.ToLower();
-				var query = context.Locations.AsQueryable();
 
-				query = query.Where(p =>
-					(p.Fsq_Id != null && p.Fsq_Id.ToLower().Contains(categorySearch)) ||
-					(p.Closed_Bucket != null && p.Closed_Bucket.ToLower().Contains(categorySearch)) ||
-					p.Distance.ToString().Contains(categorySearch) ||
-					(p.Link != null && p.Link.ToLower().Contains(categorySearch)) ||
-					(p.Name != null && p.Name.ToLower().Contains(categorySearch)) ||
-					(p.Timezone != null && p.Timezone.ToLower().Contains(categorySearch)) ||
-					(p.Request != null && p.Request.ToLower().Contains(categorySearch)) ||
-					p.Categories.Any(r => r.ToLower().Contains(categorySearch)) ||
-					(p.LocationInfo != null &&
-					 ((p.LocationInfo.Address != null && p.LocationInfo.Address.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Country != null && p.LocationInfo.Country.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Formatted_Address != null && p.LocationInfo.Formatted_Address.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Locality != null && p.LocationInfo.Locality.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Postcode != null && p.LocationInfo.Postcode.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Region != null && p.LocationInfo.Region.ToLower().Contains(categorySearch)) ||
-					  (p.LocationInfo.Cross_Street != null && p.LocationInfo.Cross_Street.ToLower().Contains(categorySearch))))
-				);
+				var query = context.Locations.Where(p =>
+				(!string.IsNullOrWhiteSpace(p.Fsq_Id) && p.Fsq_Id.ToLower().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Closed_Bucket) && p.Closed_Bucket.ToLower().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Distance.ToString()) && p.Distance.ToString().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Link) && p.Link.ToLower().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Name) && p.Name.ToLower().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Timezone) && p.Timezone.ToLower().Contains(categorySearch)) ||
+				(!string.IsNullOrWhiteSpace(p.Request) && p.Request.ToLower().Contains(categorySearch)) ||
+				(p.Categories != null && p.Categories.Any(r => !string.IsNullOrWhiteSpace(r) && r.ToLower().Contains(categorySearch))) ||
+				(p.LocationInfo != null &&
+				 ((!string.IsNullOrWhiteSpace(p.LocationInfo.Address) && p.LocationInfo.Address.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Country) && p.LocationInfo.Country.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Formatted_Address) && p.LocationInfo.Formatted_Address.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Locality) && p.LocationInfo.Locality.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Postcode) && p.LocationInfo.Postcode.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Region) && p.LocationInfo.Region.ToLower().Contains(categorySearch)) ||
+				  (!string.IsNullOrWhiteSpace(p.LocationInfo.Cross_Street) && p.LocationInfo.Cross_Street.ToLower().Contains(categorySearch)))));
 
 				return await query.ToListAsync();
 			});
