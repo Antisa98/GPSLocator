@@ -56,7 +56,7 @@ namespace GPSLocator.Controllers
 
 			if (result == null)
 			{
-				return Unauthorized("Username already exists.");
+				return BadRequest("Username already exists.");
 			}
 
 			return Ok(new RegisterResponse { ApiKey = result });
@@ -72,7 +72,7 @@ namespace GPSLocator.Controllers
 
 			if (result == null)
 			{
-				return Unauthorized("Invalid username or password.");
+				return BadRequest("Invalid username or password.");
 			}
 
 			return Ok(new LoginResponse { ApiKey = result });

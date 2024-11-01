@@ -1,43 +1,47 @@
-﻿using GPSLocator.Data;
+﻿using GPSLocator.Configuration;
+using GPSLocator.Data;
 using GPSLocator.Handlers;
 using GPSLocator.Models;
 using GPSLocator.Models.Request;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using RestSharp;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace GPSLocator.Services
 {
-	public class GPSService(GPSLocatorContext context, IConfiguration configuration, IHubContext<GPSHub> hubContext, UserRequestHandler handler)
+	public class GPSService(GPSLocatorContext context, IHubContext<GPSHub> hubContext, UserRequestHandler handler, HttpClient httpClient, IOptions<GpsLocatorSettings> options)
 	{
 		private const string AUTHORIZATION_PARAMETER_TYPE_NAME = "Authorization";
+		private const string RADIUS_QUERRY_PARAMETER_NAME = "radius";
+		private const string LATITUDE_LONGITUDE_QUERRY_PARAMETER_NAME = "ll";
+
+		private readonly GpsLocatorSettings settings = options.Value;
 
 		public async Task LocateAsync(string UserId, LocateRequest request)
 		{
 			await handler.HandleUserRequestAsync(UserId, async () =>
 			{
-				string apiKey = configuration["FoursquareApi:ApiKey"];
-				string path = $"https://api.foursquare.com/v3/places/search?ll={request.Latitude},{request.Longitude}&radius={request.Radius}";
+				string fullPath = settings.FoursquareApi.BaseUrl + settings.FoursquareApi.SearchPlacesPathV3;
 
-				var options = new RestClientOptions(path);
-				var client = new RestClient(options);
-				var restRequest = new RestRequest("");
-				restRequest.AddHeader("accept", "application/json");
-				restRequest.AddHeader(AUTHORIZATION_PARAMETER_TYPE_NAME, apiKey);
+				string path = $"{fullPath}?{LATITUDE_LONGITUDE_QUERRY_PARAMETER_NAME}={request.Latitude},{request.Longitude}&{RADIUS_QUERRY_PARAMETER_NAME}={request.Radius}";
 
-				var response = await client.GetAsync(restRequest);
+				httpClient.DefaultRequestHeaders.Clear();
+				httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+				httpClient.DefaultRequestHeaders.TryAddWithoutValidation(AUTHORIZATION_PARAMETER_TYPE_NAME, settings.FoursquareApi.ApiKey);
 
-				if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
-				{
-					throw new HttpRequestException($"Error fetching data from Foursquare API: {response.StatusCode} - {response.ErrorMessage}");
-				}
+				var response = await httpClient.GetAsync(path);
+
+				response.EnsureSuccessStatusCode();
+
+				string responseContent = await response.Content.ReadAsStringAsync();
 
 				LocationResult? result = context.Locations.FirstOrDefault(x => x.Request == path);
 
 				if (result == default(LocationResult))
 				{
-					Rootobject? responseObject = JsonSerializer.Deserialize<Rootobject>(response.Content);
+					Rootobject? responseObject = JsonSerializer.Deserialize<Rootobject>(responseContent);
 
 					if (responseObject?.results == null)
 					{
