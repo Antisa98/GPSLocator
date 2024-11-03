@@ -11,7 +11,6 @@ namespace GPSLocator.Data
 		}
 
 		public DbSet<User> Users { get; set; }
-
 		public DbSet<LocationResult> Locations { get; set; }
 	}
 }

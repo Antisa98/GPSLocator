@@ -93,6 +93,8 @@ namespace GPSLocator.Services
 			});
 		}
 
+
+		// Obsolite?
 		public async Task<IEnumerable<LocationResult>> SearchLocationsAsync(string UserId, string categorySearch)
 		{
 			return await handler.HandleUserRequestAsync(UserId, async () =>

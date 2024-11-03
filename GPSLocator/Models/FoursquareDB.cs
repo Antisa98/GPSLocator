@@ -31,7 +31,7 @@ namespace GPSLocator.Models
 		public string? Fsq_Id { get; set; }
 		public virtual List<string> Categories { get; set; }
 		public string? Closed_Bucket { get; set; }
-		public int Distance { get; set; }
+		public int? Distance { get; set; }
 		public string? Link { get; set; }
 		public virtual LocationInfo LocationInfo { get; set; }
 		public string? Name { get; set; }
