@@ -37,7 +37,7 @@ namespace GPSLocator.Services
 
 				string responseContent = await response.Content.ReadAsStringAsync();
 
-				LocationResult? result = context.Locations.FirstOrDefault(x => x.Request == path);
+				LocationResult? result = await context.Locations.FirstOrDefaultAsync(x => x.Request == path);
 
 				if (result == default(LocationResult))
 				{
@@ -50,7 +50,7 @@ namespace GPSLocator.Services
 
 					foreach (var item in responseObject.results)
 					{
-						if (context.Locations.Any(x => x.Fsq_Id == item.fsq_id))
+						if (await context.Locations.AnyAsync(x => x.Fsq_Id == item.fsq_id))
 						{
 							continue;
 						}
@@ -60,7 +60,7 @@ namespace GPSLocator.Services
 							Request = path
 						};
 
-						context.Locations.Add(locationResult);
+						await context.Locations.AddAsync(locationResult);
 					}
 
 					await context.SaveChangesAsync();
