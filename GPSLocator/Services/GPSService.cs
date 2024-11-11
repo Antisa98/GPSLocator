@@ -19,9 +19,9 @@ namespace GPSLocator.Services
 
 		private readonly GpsLocatorSettings settings = options.Value;
 
-		public async Task LocateAsync(string UserId, LocateRequest request)
+		public async Task LocateAsync(string userId, LocateRequest request)
 		{
-			await handler.HandleUserRequestAsync(UserId, async () =>
+			await handler.HandleUserRequestAsync(userId, async () =>
 			{
 				string fullPath = settings.FoursquareApi.BaseUrl + settings.FoursquareApi.SearchPlacesPathV3;
 
@@ -70,17 +70,17 @@ namespace GPSLocator.Services
 			});
 		}
 
-		public async Task<IEnumerable<LocationResult>> GetRequestsAsync(string UserId)
+		public async Task<IEnumerable<LocationResult>> GetRequestsAsync(string userId)
 		{
-			return await handler.HandleUserRequestAsync(UserId, async () =>
+			return await handler.HandleUserRequestAsync(userId, async () =>
 			{
 				return await context.Locations.ToListAsync();
 			});
 		}
 
-		public async Task<IEnumerable<LocationResult>> GetFilteredAsync(string UserId, string categoryFilter)
+		public async Task<IEnumerable<LocationResult>> GetFilteredAsync(string userId, string categoryFilter)
 		{
-			return await handler.HandleUserRequestAsync(UserId, async () =>
+			return await handler.HandleUserRequestAsync(userId, async () =>
 			{
 				categoryFilter = categoryFilter.ToLower();
 
@@ -95,9 +95,9 @@ namespace GPSLocator.Services
 
 
 		// Obsolite?
-		public async Task<IEnumerable<LocationResult>> SearchLocationsAsync(string UserId, string categorySearch)
+		public async Task<IEnumerable<LocationResult>> SearchLocationsAsync(string userId, string categorySearch)
 		{
-			return await handler.HandleUserRequestAsync(UserId, async () =>
+			return await handler.HandleUserRequestAsync(userId, async () =>
 			{
 				categorySearch = categorySearch.ToLower();
 
@@ -165,9 +165,9 @@ namespace GPSLocator.Services
 			});
 		}
 
-		public async Task AddToFavouriteAsync(string UserId, AddToFavouriteRequest request)
+		public async Task AddToFavouriteAsync(string userId, AddToFavouriteRequest request)
 		{
-			await handler.HandleUserRequestAsync(UserId, async () =>
+			await handler.HandleUserRequestAsync(userId, async () =>
 			{
 				User? user = await context.Users.FindAsync(request.UserId);
 
